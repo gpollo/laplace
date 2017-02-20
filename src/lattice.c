@@ -328,8 +328,8 @@ uint32_t lattice_compute_threaded(struct lattice* lattice, struct config* conf) 
 
         /* free the workers */
         next = next->next;
-        //if(next != NULL)
-        //   worker_delete(next->previous);
+        if(next != NULL)
+           worker_delete(next->previous);
     }
 
     /* free the last worker */
