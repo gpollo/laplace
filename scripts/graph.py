@@ -56,6 +56,6 @@ if __name__ == "__main__":
     if any('--show' in arg for arg in sys.argv):
         plt.show()
     else:
-        plt.savefig('figure.png', dpi=1000)
+        plt.savefig('figure.png', dpi=1000, transparent=True)
 
 
