@@ -168,20 +168,25 @@ double iterate(struct worker* worker) {
 
         /* make sure we can safely increment */
         pthread_spin_lock(&worker->next->lock);
-        if((worker->pos.y+1)%h+2 <= worker->next->pos.y || worker->next->done)
+
+        /* compute the distance to the next worker */
+        uint32_t next;
+        if(worker->pos.y <= worker->next->pos.y)
+            next = worker->next->pos.y-worker->pos.y;
+        else
+            next = worker->next->pos.y-worker->pos.y+h;
+        pthread_spin_unlock(&worker->next->lock);
+
+        /* increment is possible */
+        if(next >= 2 || worker->next->done)
             increment = 1;
         else
             increment = 0;
-        pthread_spin_unlock(&worker->next->lock);
 
         /* if it's too early to change, then we have to wait */
         if(!increment && worker->next != worker) {
             pthread_mutex_lock(&worker->mutex);
-            printf("Thread %2d: %d %d %p\n", worker->id,
-                worker->pos.y, worker->next->pos.y, &worker->mutex);
             pthread_cond_wait(&worker->cond, &worker->mutex);
-            printf("Thread %2d: %d %d woke up\n", worker->id,
-                worker->pos.y, worker->next->pos.y);
             pthread_mutex_unlock(&worker->mutex);
         }
 
@@ -192,7 +197,6 @@ double iterate(struct worker* worker) {
 
         /* wake up the previous worker if it was waiting for us */
         if(pthread_mutex_trylock(&worker->previous->mutex) == 0) {
-            printf("Thread %2d: %p\n", worker->id, &worker->previous->mutex);
             pthread_cond_signal(&worker->previous->cond);
             pthread_mutex_unlock(&worker->previous->mutex);
         }
