@@ -5,6 +5,31 @@ finite difference solver of Laplace's equation. It also provides
 a multi-threaded version of the algorithm. To define a boundary
 conditions, one must create a function like the one showed below.
 
+Running
+-------
+To run the code, simply clone this repository and edit the `main.c`
+file to match the desired problem.
+
+    $ git clone https://github.com/TheNiceGuy/laplace
+    $ mkdir -p laplace/build && cd laplace/build
+    $ cmake .. && make
+    $ ./laplace
+
+The matrix will be written in `stderr`, thus you can save it to a file
+using simple IO redirection.
+
+    $ ./laplace 2> data.csv
+    
+A simple script is provided in the `scripts` folder that can plot the
+data using [matplotlib](http://matplotlib.org/). The following command
+will create an image file.
+
+    $ ./graph.py data.csv
+    
+The following command will show the data directly.
+    
+    $ ./graph.py data.csv --show
+
 Examples
 --------
     struct bound* boundaries(struct bound* bound, struct rect* pos) {
