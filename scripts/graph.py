@@ -188,7 +188,6 @@ if __name__ == "__main__":
     gradient_line(data, int(3*i/6)               , 2)
     gradient_line(data, int(4*i/6)               , 2)
     gradient_line(data, int(5*i/6)               , 2)
-    gradient_line(data,-int(1*i/6)-2+len(data[0]), 2)
 
     # these are some lines that might be useful
 
@@ -203,7 +202,7 @@ if __name__ == "__main__":
 #    gradient_line(data,  8,2)
 #    gradient_line(data,312,2)
 #    gradient_line(data,int(w/2),int(h/2))
-#    for offset in [25,50,75]:
+#    for offset in [58.5]:
 #        gradient_line(data,int(w/2),int(h/2)-offset)
 #        gradient_line(data,int(w/2),int(h/2)+offset)
 
