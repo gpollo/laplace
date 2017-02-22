@@ -126,18 +126,30 @@ void lattice_set_size(struct lattice* lattice, struct rect* size) {
             /* the limits of the lattice are Neumann conditions */
             if(i == -1 || j == -1 || i == w-2 || j == h-2) {
                 /* we don't need the adjacent cells */
-                cell->param[0] = 0;
-                cell->param[1] = 0;
-                cell->param[2] = 0;
-                cell->param[3] = 0;
+                cell->adj[0] = 0;
+                cell->adj[1] = 0;
+                cell->adj[2] = 0;
+                cell->adj[3] = 0;
+
+                /* we don't need the adjacent cells */
+                cell->diag[0] = 0;
+                cell->diag[1] = 0;
+                cell->diag[2] = 0;
+                cell->diag[3] = 0;
 
                 cell->cond = NEUMANN;
             } else {
                 /* compute the index of the adjacent cells */
-                cell->param[0] = (i+1)+(j-0)*w;
-                cell->param[1] = (i+1)+(j+2)*w;
-                cell->param[2] = (i-0)+(j+1)*w;
-                cell->param[3] = (i+2)+(j+1)*w;
+                cell->adj[0] = (i+1)+(j-0)*w;
+                cell->adj[1] = (i+1)+(j+2)*w;
+                cell->adj[2] = (i-0)+(j+1)*w;
+                cell->adj[3] = (i+2)+(j+1)*w;
+
+                /* compute the index of the diagonal cells */
+                cell->diag[0] = (i+2)+(j-0)*w;
+                cell->diag[1] = (i+2)+(j+2)*w;
+                cell->diag[2] = (i-0)+(j+2)*w;
+                cell->diag[3] = (i-0)+(j-0)*w;
 
                 cell->cond = UNSET;
             }
@@ -175,15 +187,19 @@ void lattice_apply_bound(struct lattice* lattice, bound_t func) {
 }
 
 /* definition of the supported configurations */
-#define GETFORMULA40 (v1+v2+v3+v4)/4
-#define GETFORMULA31 (2*v2+v3+v4)/4
-#define GETFORMULA32 (2*v1+v3+v4)/4
-#define GETFORMULA33 (2*v4+v1+v2)/4
-#define GETFORMULA34 (2*v3+v1+v2)/4
-#define GETFORMULA21 (v2+v3)/2
-#define GETFORMULA22 (v1+v3)/2
-#define GETFORMULA23 (v1+v4)/2
-#define GETFORMULA24 (v2+v4)/2
+#define GETFORMULA_MIDDLE_0     (  v1+  v2+  v3+  v4)/4
+#define GETFORMULA_SIDE_1       (     2*v2+  v3+  v4)/4
+#define GETFORMULA_SIDE_2       (2*v1     +  v3+  v4)/4
+#define GETFORMULA_SIDE_3       (  v1+  v2+    +2*v4)/4
+#define GETFORMULA_SIDE_4       (  v1+  v2+2*v3     )/4
+#define GETFORMULA_CORNER_1     (   v2+v3   )/2
+#define GETFORMULA_CORNER_2     (v1   +v3   )/2
+#define GETFORMULA_CORNER_3     (v1      +v4)/2
+#define GETFORMULA_CORNER_4     (   v2   +v4)/2
+#define GETFORMULA_INV_CORNER_1 (  v1+2*v2+2*v3+  v4)/6
+#define GETFORMULA_INV_CORNER_2 (2*v1+  v2+2*v3+  v4)/6
+#define GETFORMULA_INV_CORNER_3 (2*v1+  v2+  v3+2*v4)/6
+#define GETFORMULA_INV_CORNER_4 (  v1+2*v2+  v3+2*v4)/6
 
 /**
  * This macro generates function for the supported configurations.
@@ -191,30 +207,34 @@ void lattice_apply_bound(struct lattice* lattice, bound_t func) {
  * compiler should optimize away points that are not needed.
  */
 #define MAKE_FUNCPOINTS(NUM,IDX) \
-double func##NUM##points##IDX (struct lattice* lattice, struct cell* cell) {\
-    uint32_t i1 = cell->param[0];         \
-    uint32_t i2 = cell->param[1];         \
-    uint32_t i3 = cell->param[2];         \
-    uint32_t i4 = cell->param[3];         \
+double func_##NUM##_##IDX (struct lattice* lattice, struct cell* cell) {\
+    uint32_t i1 = cell->adj[0];           \
+    uint32_t i2 = cell->adj[1];           \
+    uint32_t i3 = cell->adj[2];           \
+    uint32_t i4 = cell->adj[3];           \
                                           \
     double v1 = lattice->cells[i1].value; \
     double v2 = lattice->cells[i2].value; \
     double v3 = lattice->cells[i3].value; \
     double v4 = lattice->cells[i4].value; \
                                           \
-    return GETFORMULA##NUM##IDX ;         \
+    return GETFORMULA_##NUM##_##IDX ;     \
 }
 
 /* we generate the function for each configuration */
-MAKE_FUNCPOINTS(4,0)
-MAKE_FUNCPOINTS(3,1)
-MAKE_FUNCPOINTS(3,2)
-MAKE_FUNCPOINTS(3,3)
-MAKE_FUNCPOINTS(3,4)
-MAKE_FUNCPOINTS(2,1)
-MAKE_FUNCPOINTS(2,2)
-MAKE_FUNCPOINTS(2,3)
-MAKE_FUNCPOINTS(2,4)
+MAKE_FUNCPOINTS(MIDDLE,0)
+MAKE_FUNCPOINTS(SIDE,1)
+MAKE_FUNCPOINTS(SIDE,2)
+MAKE_FUNCPOINTS(SIDE,3)
+MAKE_FUNCPOINTS(SIDE,4)
+MAKE_FUNCPOINTS(CORNER,1)
+MAKE_FUNCPOINTS(CORNER,2)
+MAKE_FUNCPOINTS(CORNER,3)
+MAKE_FUNCPOINTS(CORNER,4)
+MAKE_FUNCPOINTS(INV_CORNER,1)
+MAKE_FUNCPOINTS(INV_CORNER,2)
+MAKE_FUNCPOINTS(INV_CORNER,3)
+MAKE_FUNCPOINTS(INV_CORNER,4)
 
 void lattice_generate_function(struct lattice* lattice) {
     /* extract the dimension of the lattice */
@@ -237,29 +257,46 @@ void lattice_generate_function(struct lattice* lattice) {
             }
 
             /* extracts each adjacent cell */
-            struct cell* c1 = &lattice->cells[cell->param[0]];
-            struct cell* c2 = &lattice->cells[cell->param[1]];
-            struct cell* c3 = &lattice->cells[cell->param[2]];
-            struct cell* c4 = &lattice->cells[cell->param[3]];
+            struct cell* a1 = &lattice->cells[cell->adj[0]];
+            struct cell* a2 = &lattice->cells[cell->adj[1]];
+            struct cell* a3 = &lattice->cells[cell->adj[2]];
+            struct cell* a4 = &lattice->cells[cell->adj[3]];
+
+            struct cell* d1 = &lattice->cells[cell->diag[0]];
+            struct cell* d2 = &lattice->cells[cell->diag[1]];
+            struct cell* d3 = &lattice->cells[cell->diag[2]];
+            struct cell* d4 = &lattice->cells[cell->diag[3]];
 
             /* check if the adjacent cells are neumann boundary */
-            int b1 = (c1->cond == NEUMANN) ? 1 : 0;
-            int b2 = (c2->cond == NEUMANN) ? 1 : 0;
-            int b3 = (c3->cond == NEUMANN) ? 1 : 0;
-            int b4 = (c4->cond == NEUMANN) ? 1 : 0;
+            int A1 = (a1->cond == NEUMANN) ? 1 : 0;
+            int A2 = (a2->cond == NEUMANN) ? 1 : 0;
+            int A3 = (a3->cond == NEUMANN) ? 1 : 0;
+            int A4 = (a4->cond == NEUMANN) ? 1 : 0;
+
+            /* check if the diagonal cells are neumann boundary */
+            int D1 = (d1->cond == NEUMANN) ? 1 : 0;
+            int D2 = (d2->cond == NEUMANN) ? 1 : 0;
+            int D3 = (d3->cond == NEUMANN) ? 1 : 0;
+            int D4 = (d4->cond == NEUMANN) ? 1 : 0;
 
             /* generate a function the supported configurations */
             #define f lattice->update[index]
-            if     (!b1 && !b2 && !b3 && !b4) f = &func4points0;
-            else if( b1 && !b2 && !b3 && !b4) f = &func3points1;
-            else if(!b1 &&  b2 && !b3 && !b4) f = &func3points2;
-            else if(!b1 && !b2 &&  b3 && !b4) f = &func3points3;
-            else if(!b1 && !b2 && !b3 &&  b4) f = &func3points4;
-            else if( b1 && !b2 && !b3 &&  b4) f = &func2points1;
-            else if(!b1 &&  b2 && !b3 &&  b4) f = &func2points2;
-            else if(!b1 &&  b2 &&  b3 && !b4) f = &func2points3;
-            else if( b1 && !b2 &&  b3 && !b4) f = &func2points4;
-            else f = &func4points0;
+            if(!A1 && !A2 && !A3 && !A4) {
+                if     ( D1 && !D2 && !D3 && !D4) f = &func_INV_CORNER_1;
+                else if(!D1 &&  D2 && !D3 && !D4) f = &func_INV_CORNER_2;
+                else if(!D1 && !D2 &&  D3 && !D4) f = &func_INV_CORNER_3;
+                else if(!D1 && !D2 && !D3 &&  D4) f = &func_INV_CORNER_4;
+                else f = &func_MIDDLE_0;
+            }
+            else if( A1 && !A2 && !A3 && !A4) f = &func_SIDE_1;
+            else if(!A1 &&  A2 && !A3 && !A4) f = &func_SIDE_2;
+            else if(!A1 && !A2 &&  A3 && !A4) f = &func_SIDE_3;
+            else if(!A1 && !A2 && !A3 &&  A4) f = &func_SIDE_4;
+            else if( A1 && !A2 && !A3 &&  A4) f = &func_CORNER_1;
+            else if(!A1 &&  A2 && !A3 &&  A4) f = &func_CORNER_2;
+            else if(!A1 &&  A2 &&  A3 && !A4) f = &func_CORNER_3;
+            else if( A1 && !A2 &&  A3 && !A4) f = &func_CORNER_4;
+            else f = &func_MIDDLE_0;
             #undef f
         }
     }

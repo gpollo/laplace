@@ -39,12 +39,22 @@ struct cell {
     enum condition cond;
     /**
      * These are the indexes of the four adjacent cells.
-     *     - [0] is above
-     *     - [1] is below
-     *     - [2] is left
-     *     - [4] is right
+     *
+     *      [ ] [1] [ ]
+     *      [3] [x] [4]
+     *      [ ] [2] [ ]
+     *
      */
-    uint32_t param[4];
+    uint32_t adj[4];
+    /**
+     * These are the indexes of the four diagonal cells.
+     *
+     *      [4] [ ] [1]
+     *      [ ] [x] [ ]
+     *      [3] [ ] [2]
+     *
+     */
+    uint32_t diag[4];
 };
 
 /**
