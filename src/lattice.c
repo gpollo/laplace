@@ -180,10 +180,10 @@ void lattice_apply_bound(struct lattice* lattice, bound_t func) {
 #define GETFORMULA32 (2*v1+v3+v4)/4
 #define GETFORMULA33 (2*v4+v1+v2)/4
 #define GETFORMULA34 (2*v3+v1+v2)/4
-#define GETFORMULA21 (v1+v4)/2
-#define GETFORMULA22 (v2+v4)/2
-#define GETFORMULA23 (v2+v3)/2
-#define GETFORMULA24 (v1+v3)/2
+#define GETFORMULA21 (v2+v3)/2
+#define GETFORMULA22 (v1+v3)/2
+#define GETFORMULA23 (v1+v4)/2
+#define GETFORMULA24 (v2+v4)/2
 
 /**
  * This macro generates function for the supported configurations.
