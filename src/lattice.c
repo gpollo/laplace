@@ -36,8 +36,8 @@ struct lattice* lattice_new(struct rect* size, struct point* dim, bound_t func) 
         return NULL;
 
     /* add two rows and two columns */
-    dim->x += 2;
-    dim->y += 2;
+    dim->x += 3;
+    dim->y += 3;
 
     /* compute the number of cell */
     uint32_t m = dim->x*dim->y;
@@ -94,9 +94,9 @@ void lattice_print(struct lattice* lattice) {
 
             /* don't print cells if they contain neumann condition */
             if(cell->cond == NEUMANN)
-                fprintf(stderr, "       ,");
+                fprintf(stderr, "          ,");
             else
-                fprintf(stderr, "% 07.5f,", cell->value);
+                fprintf(stderr, "% 10.5f,", cell->value);
         }
         fprintf(stderr, "\n");
     }
@@ -108,8 +108,8 @@ void lattice_set_size(struct lattice* lattice, struct rect* size) {
     uint32_t h = lattice->dim.y;
 
     /* compute the subdivisions */
-    double dx = size->x/(w-2);
-    double dy = size->y/(h-2);
+    double dx = size->x/(w-3);
+    double dy = size->y/(h-3);
 
     for(int32_t j = -1; j+1 < h; j++) {
         for(int32_t i = -1; i+1 < w; i++) {
