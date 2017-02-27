@@ -19,15 +19,7 @@ struct bound* boundaries(struct bound* bound, struct rect* pos) {
         bound->cond  = NONE;
     }
 
-/*    if(x <= 16 && y >= 48) {
-        bound->value =  150;
-        bound->cond  = DIRICHLET;
-    } else if(44 <= x && x <= 64 && y >= 48) {
-        bound->value = -150;
-        bound->cond  = DIRICHLET;
-	}*/
-
-	if(16 <  x && x < 48 && (y < 12 || y >= 36)) {
+	if(16 <  x && x < 48 && (y < 12 || y > 36)) {
         bound->value = 0;
         bound->cond  = NEUMANN;
     }
@@ -37,13 +29,13 @@ struct bound* boundaries(struct bound* bound, struct rect* pos) {
 
 int main() {
     struct rect size = {64, 48};
-    struct point dim = {320, 240};
-    struct config conf = {8, 10, 0.0001};
+    struct point dim = {16, 12};
+    struct config conf = {16, 10, 0.001};
     struct lattice* lattice = lattice_new(&size, &dim, &boundaries);
     struct worker* worker;
 
-    //printf("%d\n", lattice_compute(lattice, 0.01));
-    printf("%d\n", lattice_compute_threaded(lattice, &conf));
+    printf("%d\n", lattice_compute(lattice, 0.01));
+    //printf("%d\n", lattice_compute_threaded(lattice, &conf));
 
     lattice_print(lattice);
     lattice_delete(lattice);
