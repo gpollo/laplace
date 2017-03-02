@@ -210,6 +210,9 @@ if __name__ == "__main__":
     plt.gca().set_xlim(1,len(data[0])-3  )
     plt.gca().set_ylim(  len(data   )-2,1)
 
+    plt.gca().get_yaxis().set_tick_params(direction='out')
+    plt.gca().get_xaxis().set_tick_params(direction='out')
+
     # we show the plot if specified, else we save it to a file
     if any('--show' in arg for arg in sys.argv):
         plt.show()
