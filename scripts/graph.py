@@ -213,6 +213,8 @@ if __name__ == "__main__":
     # we show the plot if specified, else we save it to a file
     if any('--show' in arg for arg in sys.argv):
         plt.show()
+    elif any('--pgf' in arg for arg in sys.argv):
+        plt.savefig('figure.pgf', transparent=True)
     else:
         plt.savefig('figure.png', dpi=1000, transparent=True)
 
